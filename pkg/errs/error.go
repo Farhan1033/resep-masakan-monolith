@@ -41,3 +41,27 @@ func NewNotFound(message string) ErrMessage {
 		ErrError:      "DATA_NOT_FOUND",
 	}
 }
+
+func NewBadRequest(message string) ErrMessage {
+	return &ErrMessageData{
+		ErrStatusCode: http.StatusBadRequest,
+		ErrMessage:    message,
+		ErrError:      "BAD_REQUEST",
+	}
+}
+
+func NewUnauthorized(message string) ErrMessage {
+	return &ErrMessageData{
+		ErrStatusCode: http.StatusUnauthorized,
+		ErrMessage:    message,
+		ErrError:      "UNAUTHORIZED_USER",
+	}
+}
+
+func NewUnprocessableEntity(message string) ErrMessage {
+	return &ErrMessageData{
+		ErrMessage:    message,
+		ErrStatusCode: http.StatusUnprocessableEntity,
+		ErrError:      "INVALID_REQUEST_BODY",
+	}
+}
