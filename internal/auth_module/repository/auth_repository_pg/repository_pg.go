@@ -30,7 +30,7 @@ func (r *AuthRepo) CreateUser(user *entity.User) (*entity.User, errs.ErrMessage)
 func (r *AuthRepo) GetByEmail(email string) (*entity.User, errs.ErrMessage) {
 	var user entity.User
 
-	if err := r.db.First(user, "email = ?", email); err != nil {
+	if err := r.db.First(&user, "email = ?", email).Error; err != nil {
 		return nil, errs.NewNotFound(fmt.Sprintf("User with this %s email not found", email))
 	}
 
