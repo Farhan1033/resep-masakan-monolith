@@ -14,6 +14,11 @@ type UpdateRequest struct {
 	Password string `json:"password,omitempty" validate:"omitempty,min=6,max=30"`
 }
 
+type LoginRequest struct {
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=6,max=30"`
+}
+
 type CreateAuthResponse struct {
 	ID    uuid.UUID `json:"id"`
 	Name  string    `json:"name"`
