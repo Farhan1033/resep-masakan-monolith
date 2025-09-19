@@ -42,6 +42,14 @@ func NewNotFound(message string) ErrMessage {
 	}
 }
 
+func NewFound(message string) ErrMessage {
+	return &ErrMessageData{
+		ErrMessage:    message,
+		ErrStatusCode: http.StatusFound,
+		ErrError:      "DATA_ALREADY_EXIST",
+	}
+}
+
 func NewBadRequest(message string) ErrMessage {
 	return &ErrMessageData{
 		ErrStatusCode: http.StatusBadRequest,
