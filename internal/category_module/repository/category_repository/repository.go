@@ -8,6 +8,8 @@ import (
 
 type CategoryRepository interface {
 	Create(catgeory *categoryentity.Category) (*categoryentity.Category, errs.ErrMessage)
-	Get() ([]*categoryentity.Category, errs.ErrMessage)
-	Update(id uuid.UUID, category *categoryentity.Category) (*categoryentity.Category, errs.ErrMessage)
+	Get() ([]categoryentity.Category, errs.ErrMessage)
+	GetByName(name string) (*categoryentity.Category, errs.ErrMessage)
+	GetById(id uuid.UUID) (*categoryentity.Category, errs.ErrMessage)
+	Delete(id uuid.UUID, status bool) errs.ErrMessage
 }
