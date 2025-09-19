@@ -6,6 +6,10 @@ import (
 	authhandler "github.com/Farhan1033/resep-masakan-monolith.git/internal/auth_module/handler"
 	authrepositorypg "github.com/Farhan1033/resep-masakan-monolith.git/internal/auth_module/repository/auth_repository_pg"
 	authserviceimpl "github.com/Farhan1033/resep-masakan-monolith.git/internal/auth_module/service/auth_service_impl"
+	categoryhandler "github.com/Farhan1033/resep-masakan-monolith.git/internal/category_module/handler"
+	categoryrepositorypg "github.com/Farhan1033/resep-masakan-monolith.git/internal/category_module/repository/category_repository_pg"
+	categoryserviceimp "github.com/Farhan1033/resep-masakan-monolith.git/internal/category_module/service/category_service_imp"
+	"github.com/Farhan1033/resep-masakan-monolith.git/pkg/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,15 +21,20 @@ func main() {
 
 	// Init Repository
 	authRepo := authrepositorypg.NewAuthRepository(postgressql.DB)
+	categoryRepo := categoryrepositorypg.NewCategoryRepository(postgressql.DB)
 
 	// Init Service
 	authService := authserviceimpl.NewAuthService(authRepo)
+	categoryService := categoryserviceimp.NewCategoryService(categoryRepo)
 
 	// Setup Router
 	publicGroup := r.Group("/api/v1")
+	privateGroup := r.Group("/api/v1")
+	privateGroup.Use(middleware.Authentication())
 
 	// Init Handler
 	authhandler.NewAuthHandler(publicGroup, authService)
+	categoryhandler.NewCategoryHandler(privateGroup, categoryService)
 
 	r.GET("/", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{"Status": "Berhasil"})
