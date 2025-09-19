@@ -41,8 +41,9 @@ func (s *AuthSvc) Create(payload *dto.CreateRequest) (*dto.CreateAuthResponse, e
 	payload.Password = string(hash)
 
 	userPayload := &entity.User{
-		Name:     payload.Name,
 		Email:    payload.Email,
+		UserName: payload.UserName,
+		FullName: payload.FullName,
 		Password: payload.Password,
 	}
 
@@ -52,9 +53,11 @@ func (s *AuthSvc) Create(payload *dto.CreateRequest) (*dto.CreateAuthResponse, e
 	}
 
 	response := &dto.CreateAuthResponse{
-		ID:    registeredUser.ID,
-		Name:  registeredUser.Name,
-		Email: registeredUser.Email,
+		ID:        registeredUser.ID,
+		Email:     registeredUser.Email,
+		UserName:  registeredUser.UserName,
+		FullName:  registeredUser.FullName,
+		CreatedAt: registeredUser.CreatedAt.Local().String(),
 	}
 
 	return response, nil
@@ -84,9 +87,16 @@ func (s *AuthSvc) Login(payload *dto.LoginRequest) (*dto.LoginResponse, errs.Err
 		return nil, errs.NewInternalServerError(err.Error())
 	}
 
+	data := &dto.LoginDataResponse{
+		ID:       existingUser.ID,
+		Email:    existingUser.Email,
+		UserName: existingUser.UserName,
+		FullName: existingUser.FullName,
+	}
+
 	response := &dto.LoginResponse{
-		Message: "Success login",
-		Token:   token,
+		Data:  data,
+		Token: token,
 	}
 
 	return response, nil
