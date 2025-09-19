@@ -1,6 +1,8 @@
 package authhandler
 
 import (
+	"strings"
+
 	"github.com/Farhan1033/resep-masakan-monolith.git/internal/auth_module/dto"
 	authservice "github.com/Farhan1033/resep-masakan-monolith.git/internal/auth_module/service/auth_service"
 	"github.com/Farhan1033/resep-masakan-monolith.git/pkg/errs"
@@ -16,6 +18,7 @@ func NewAuthHandler(r *gin.RouterGroup, svc authservice.AuthService) {
 	h := AuthHandler{svc: svc}
 	r.POST("/auth/register", h.Register)
 	r.POST("/auth/login", h.Login)
+	r.POST("/auth/logout", h.Logout)
 }
 
 func (h *AuthHandler) Register(ctx *gin.Context) {
@@ -29,9 +32,10 @@ func (h *AuthHandler) Register(ctx *gin.Context) {
 	response, err := h.svc.Create(&payload)
 	if err != nil {
 		ctx.JSON(err.StatusCode(), err)
+		return
 	}
 
-	helper.CreateResponse(ctx, "Account created successfully", response)
+	helper.CreateResponse(ctx, "User registered successfully", response)
 }
 
 func (h *AuthHandler) Login(ctx *gin.Context) {
@@ -48,5 +52,25 @@ func (h *AuthHandler) Login(ctx *gin.Context) {
 		return
 	}
 
-	helper.OKResponse(ctx, "Login successfully", data)
+	helper.OKResponse(ctx, "Login successful", data)
+}
+
+func (h *AuthHandler) Logout(ctx *gin.Context) {
+	authHeader := ctx.GetHeader("Authorization")
+	if authHeader == "" {
+		errsFormat := errs.NewUnauthorized("Authorization header is required")
+		ctx.JSON(errsFormat.StatusCode(), errsFormat)
+		ctx.Abort()
+		return
+	}
+
+	tokenParts := strings.Split(authHeader, " ")
+	if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+		errsFormat := errs.NewUnauthorized("Invalid authorization header format")
+		ctx.JSON(errsFormat.StatusCode(), errsFormat)
+		ctx.Abort()
+		return
+	}
+
+	helper.OKResponse(ctx, "Logged out successfully", nil)
 }
