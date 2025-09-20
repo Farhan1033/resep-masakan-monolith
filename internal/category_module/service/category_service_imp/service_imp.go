@@ -79,6 +79,11 @@ func (s *CategorySvc) Get() ([]*dto.CategoryResponse, errs.ErrMessage) {
 }
 
 func (s *CategorySvc) Delete(id uuid.UUID) errs.ErrMessage {
+	if err := s.validate.Struct(id); err != nil {
+		formatError := validation.FormatValidationError(err)
+		return errs.NewBadRequest(fmt.Sprintf("Required: %s", formatError))
+	}
+
 	if _, err := s.repo.GetById(id); err != nil {
 		return errs.NewFound(err.Error())
 	}
