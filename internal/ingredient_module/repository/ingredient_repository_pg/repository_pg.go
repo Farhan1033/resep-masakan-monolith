@@ -42,7 +42,7 @@ func (r *IngredientRepo) GetByName(name string) (*ingrediententity.Ingredient, e
 	var payload ingrediententity.Ingredient
 
 	if err := r.db.Where("name = ?", name).First(&payload).Error; err != nil {
-		return nil, errs.NewNotFound(fmt.Sprintf("This ingredient with %s not found!", name))
+		return nil, errs.NewFound(fmt.Sprintf("This ingredient %s already exist!", name))
 	}
 
 	return &payload, nil
