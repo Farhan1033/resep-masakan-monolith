@@ -7,7 +7,7 @@ import (
 )
 
 type CreateRequest struct {
-	Name string `json:"name" validate:"required;min=5"`
+	Name string `json:"name" validate:"required"`
 }
 
 type CreateResponse struct {
