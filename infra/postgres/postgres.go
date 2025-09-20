@@ -7,6 +7,7 @@ import (
 	"github.com/Farhan1033/resep-masakan-monolith.git/infra/config"
 	"github.com/Farhan1033/resep-masakan-monolith.git/internal/auth_module/entity"
 	categoryentity "github.com/Farhan1033/resep-masakan-monolith.git/internal/category_module/entity"
+	ingrediententity "github.com/Farhan1033/resep-masakan-monolith.git/internal/ingredient_module/entity"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -30,7 +31,11 @@ func InitPostgres() {
 		log.Fatal("Failed to connect to database: ", err)
 	}
 
-	errMigrate := DB.AutoMigrate(entity.User{}, categoryentity.Category{})
+	errMigrate := DB.AutoMigrate(
+		entity.User{},
+		categoryentity.Category{},
+		ingrediententity.Ingredient{},
+	)
 	if errMigrate != nil {
 		log.Fatal("Failed to migrate database")
 	}
