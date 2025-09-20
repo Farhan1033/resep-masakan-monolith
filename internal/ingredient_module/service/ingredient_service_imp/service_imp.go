@@ -31,8 +31,8 @@ func (s *IngredientSvc) Create(payload *dto.CreateRequest) (*dto.CreateResponse,
 		return nil, errs.NewBadRequest(fmt.Sprintf("Required: %s", formatError))
 	}
 
-	if _, err := s.repo.GetByName(payload.Name); err != nil {
-		return nil, errs.NewNotFound(err.Error())
+	if _, err := s.repo.GetByName(payload.Name); err == nil {
+		return nil, errs.NewFound(fmt.Sprintf("This ingredient %s already exist!", payload.Name))
 	}
 
 	ingredientNew := &ingrediententity.Ingredient{
@@ -76,11 +76,6 @@ func (s *IngredientSvc) Get() ([]*dto.CreateResponse, errs.ErrMessage) {
 }
 
 func (s *IngredientSvc) Delete(id uuid.UUID) errs.ErrMessage {
-	if err := s.validate.Struct(id); err != nil {
-		formatError := validation.FormatValidationError(err)
-		return errs.NewBadRequest(fmt.Sprintf("Required: %s", formatError))
-	}
-
 	response := s.repo.Delete(id, false)
 	if response != nil {
 		return errs.NewInternalServerError(response.Error())
