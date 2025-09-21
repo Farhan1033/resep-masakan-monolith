@@ -35,7 +35,7 @@ func main() {
 	authService := authserviceimpl.NewAuthService(authRepo)
 	categoryService := categoryserviceimp.NewCategoryService(categoryRepo)
 	ingredientService := ingredientserviceimp.NewIngredientService(ingredientRepo)
-	recipeService := recipeserviceimp.NewRecipeService(recipeRepo, authRepo)
+	recipeService := recipeserviceimp.NewRecipeService(recipeRepo, authRepo, categoryRepo)
 
 	// Setup Router
 	publicGroup := r.Group("/api/v1")
