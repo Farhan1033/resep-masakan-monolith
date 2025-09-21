@@ -6,6 +6,7 @@ import (
 	"github.com/Farhan1033/resep-masakan-monolith.git/internal/auth_module/entity"
 	authrepository "github.com/Farhan1033/resep-masakan-monolith.git/internal/auth_module/repository/auth_repository"
 	"github.com/Farhan1033/resep-masakan-monolith.git/pkg/errs"
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -32,6 +33,16 @@ func (r *AuthRepo) GetByEmail(email string) (*entity.User, errs.ErrMessage) {
 
 	if err := r.db.First(&user, "email = ?", email).Error; err != nil {
 		return nil, errs.NewNotFound(fmt.Sprintf("User with this %s email not found", email))
+	}
+
+	return &user, nil
+}
+
+func (r *AuthRepo) GetById(id uuid.UUID) (*entity.User, errs.ErrMessage) {
+	var user entity.User
+
+	if err := r.db.First(&user, "id = ?", id).Error; err != nil {
+		return nil, errs.NewNotFound("User with this id not found")
 	}
 
 	return &user, nil
