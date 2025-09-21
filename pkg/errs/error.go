@@ -68,8 +68,16 @@ func NewUnauthorized(message string) ErrMessage {
 
 func NewUnprocessableEntity(message string) ErrMessage {
 	return &ErrMessageData{
-		ErrMessage:    message,
 		ErrStatusCode: http.StatusUnprocessableEntity,
+		ErrMessage:    message,
 		ErrError:      "INVALID_REQUEST_BODY",
+	}
+}
+
+func NewForbidden(message string) ErrMessage {
+	return &ErrMessageData{
+		ErrStatusCode: http.StatusForbidden,
+		ErrMessage:    message,
+		ErrError:      "FORBIDDEN_USER",
 	}
 }
