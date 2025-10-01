@@ -23,6 +23,8 @@ func FormatValidationError(err error) errs.ErrMessage {
 			errMessage = append(errMessage, fmt.Sprintf("invalid format %s", strings.ToLower(err.Field())))
 		case "url":
 			errMessage = append(errMessage, fmt.Sprintf("invalid format %s", strings.ToLower(err.Field())))
+		case "gt":
+			errMessage = append(errMessage, fmt.Sprintf("%s must be greater than zero", strings.ToLower(err.Field())))
 		default:
 			errMessage = append(errMessage, fmt.Sprintf("%s is invalid", strings.ToLower(err.Field())))
 		}
