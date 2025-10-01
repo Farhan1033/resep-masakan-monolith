@@ -9,6 +9,9 @@ import (
 	categoryhandler "github.com/Farhan1033/resep-masakan-monolith.git/internal/category_module/handler"
 	categoryrepositorypg "github.com/Farhan1033/resep-masakan-monolith.git/internal/category_module/repository/category_repository_pg"
 	categoryserviceimp "github.com/Farhan1033/resep-masakan-monolith.git/internal/category_module/service/category_service_imp"
+	detailrecipehandler "github.com/Farhan1033/resep-masakan-monolith.git/internal/detail_recipe_module/handler"
+	detailreciperepositorypg "github.com/Farhan1033/resep-masakan-monolith.git/internal/detail_recipe_module/repository/detail_recipe_repository_pg"
+	detailrecipeserviceimpl "github.com/Farhan1033/resep-masakan-monolith.git/internal/detail_recipe_module/service/detail_recipe_service_impl"
 	ingredienthandler "github.com/Farhan1033/resep-masakan-monolith.git/internal/ingredient_module/handler"
 	ingredientrepositorypg "github.com/Farhan1033/resep-masakan-monolith.git/internal/ingredient_module/repository/ingredient_repository_pg"
 	ingredientserviceimp "github.com/Farhan1033/resep-masakan-monolith.git/internal/ingredient_module/service/ingredient_service_imp"
@@ -30,12 +33,14 @@ func main() {
 	categoryRepo := categoryrepositorypg.NewCategoryRepository(postgressql.DB)
 	ingredientRepo := ingredientrepositorypg.NewIngredientRepository(postgressql.DB)
 	recipeRepo := reciperepositorypg.NewRecipeRepository(postgressql.DB)
+	detailRepo := detailreciperepositorypg.NewDetailRecipeRepository(postgressql.DB)
 
 	// Init Service
 	authService := authserviceimpl.NewAuthService(authRepo)
 	categoryService := categoryserviceimp.NewCategoryService(categoryRepo)
 	ingredientService := ingredientserviceimp.NewIngredientService(ingredientRepo)
 	recipeService := recipeserviceimp.NewRecipeService(recipeRepo, authRepo, categoryRepo)
+	detailService := detailrecipeserviceimpl.NewDetailRecipeService(detailRepo, authRepo)
 
 	// Setup Router
 	publicGroup := r.Group("/api/v1")
@@ -47,6 +52,7 @@ func main() {
 	categoryhandler.NewCategoryHandler(privateGroup, categoryService)
 	ingredienthandler.NewIngredientHandler(privateGroup, ingredientService)
 	recipehandler.NewRecipeHandler(privateGroup, recipeService)
+	detailrecipehandler.NewDetailRecipeHandler(privateGroup, detailService)
 
 	r.GET("/", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{"Status": "Berhasil"})
