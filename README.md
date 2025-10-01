@@ -125,6 +125,9 @@ DB_USER=root
 DB_PASS=password
 DB_NAME=resep_masakan
 
+# Application Server Port
+APP_PORT=8080
+
 # JWT Secret Key
 JWT_SECRET=your_secret_key_yang_sangat_panjang_dan_aman
 ```
@@ -154,4 +157,5 @@ http://localhost:8080/api/v1
 ```
 
 ```
+
 
