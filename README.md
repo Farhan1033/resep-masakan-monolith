@@ -134,7 +134,7 @@ JWT_SECRET=your_secret_key_yang_sangat_panjang_dan_aman
 Pastikan Anda memiliki **Golang versi 1.20 atau lebih baru** terinstal.
 
 ```bash
-go run main.go
+go run ./cmd/
 ```
 
 ### 4\. Akses API
@@ -154,3 +154,4 @@ http://localhost:8080/api/v1
 ```
 
 ```
+
