@@ -44,7 +44,7 @@ Setiap **module** (Auth, Category, Ingredient, Recipe, dll.) distrukturkan denga
 
 ## 📊 ERD (Entity Relationship Diagram)
 
-![alt text](1759339811640.png)
+![alt text](image.png)
 
 **Penjelasan Singkat Entitas:**
 
