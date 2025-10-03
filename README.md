@@ -44,7 +44,7 @@ Setiap **module** (Auth, Category, Ingredient, Recipe, dll.) distrukturkan denga
 
 ## 📊 ERD (Entity Relationship Diagram)
 
-![alt text](image.png)
+![ERD_Diagram](https://github.com/user-attachments/assets/c0840243-2760-419d-a15c-84e1a17318dd)
 
 **Penjelasan Singkat Entitas:**
 
@@ -162,5 +162,6 @@ http://localhost:8080/api/v1 (Jika dijalankan di lokal)
 ```
 
 ```
+
 
 
