@@ -52,7 +52,9 @@ func main() {
 	// Setup Gin
 	r := gin.Default()
 
+	// Comment the line bellow to change the server to run debug mode.
 	gin.SetMode(gin.ReleaseMode)
+	// Comment the line bellow to change the server to run debug mode.
 	log.Println("Gin mode: RELEASE")
 
 	r.Use(cors.New(cors.Config{
