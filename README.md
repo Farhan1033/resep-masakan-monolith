@@ -111,7 +111,7 @@ Ikuti langkah-langkah di bawah untuk menjalankan *project* ini secara lokal.
 ### 1. Clone Repository
 
 ```bash
-git clone [https://github.com/username/resep-masakan-monolith.git](https://github.com/username/resep-masakan-monolith.git)
+git clone https://github.com/username/resep-masakan-monolith.git
 cd resep-masakan-monolith
 ````
 
