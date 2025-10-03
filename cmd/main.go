@@ -1,6 +1,9 @@
 package main
 
 import (
+	"log"
+	"os"
+
 	"github.com/Farhan1033/resep-masakan-monolith.git/infra/config"
 	postgressql "github.com/Farhan1033/resep-masakan-monolith.git/infra/postgres"
 	authhandler "github.com/Farhan1033/resep-masakan-monolith.git/internal/auth_module/handler"
@@ -25,10 +28,26 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func main() {
-	config.LoadEnv()
-	postgressql.InitPostgres()
+var (
+	infoLogger  *log.Logger
+	errorLogger *log.Logger
+)
 
+func init() {
+	infoLogger = log.New(os.Stdout, "[INFO] ", log.Ldate|log.Ltime|log.Lshortfile)
+	errorLogger = log.New(os.Stderr, "[ERROR] ", log.Ldate|log.Ltime|log.Lshortfile)
+}
+
+func main() {
+	// Load ENV
+	config.LoadEnv()
+	infoLogger.Println("Environment variables loaded")
+
+	// Init DB
+	postgressql.InitPostgres()
+	infoLogger.Println("PostgreSQL connected successfully")
+
+	// Setup Gin
 	r := gin.Default()
 
 	// Init Repository
@@ -66,9 +85,13 @@ func main() {
 	stephandler.NewRecipeStepHandler(privateGroup, stepService)
 	recipehandler.NewRecipeHandler(privateGroup, recipeService)
 
+	// Health Check
 	r.GET("/", func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{"Status": "Berhasil"})
+		ctx.JSON(200, gin.H{"status": "ok"})
 	})
 
-	r.Run(":8080")
+	infoLogger.Println("Server running at http://localhost:8080")
+	if err := r.Run(":8080"); err != nil {
+		errorLogger.Fatalf("Failed to start server: %v", err)
+	}
 }
