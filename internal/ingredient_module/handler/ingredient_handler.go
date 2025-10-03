@@ -17,7 +17,7 @@ func NewIngredientHandler(r *gin.RouterGroup, svc ingredientservice.IngredientSe
 	h := IngredientHandler{svc: svc}
 	r.POST("/ingredient/create", h.Create)
 	r.GET("/ingredients", h.Get)
-	r.PATCH("/ingredient/delete", h.Delete)
+	r.DELETE("/ingredient/delete/:id", h.Delete)
 }
 
 func (h *IngredientHandler) Create(ctx *gin.Context) {
@@ -48,7 +48,7 @@ func (h *IngredientHandler) Get(ctx *gin.Context) {
 }
 
 func (h *IngredientHandler) Delete(ctx *gin.Context) {
-	idParam := ctx.Query("id")
+	idParam := ctx.Param("id")
 	if idParam == "" {
 		errFormat := errs.NewBadRequest("Invalid id category")
 		ctx.JSON(errFormat.StatusCode(), errFormat)

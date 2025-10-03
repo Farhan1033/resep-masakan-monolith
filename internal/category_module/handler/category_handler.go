@@ -17,7 +17,7 @@ func NewCategoryHandler(r *gin.RouterGroup, svc categoryservice.CategoryService)
 	h := CategoryHandler{svc: svc}
 	r.POST("/category/create", h.Create)
 	r.GET("/categories", h.Get)
-	r.PATCH("/category/delete", h.Delete)
+	r.DELETE("/category/delete/:id", h.Delete)
 }
 
 func (h *CategoryHandler) Create(ctx *gin.Context) {
@@ -49,7 +49,7 @@ func (h *CategoryHandler) Get(ctx *gin.Context) {
 }
 
 func (h *CategoryHandler) Delete(ctx *gin.Context) {
-	idParam := ctx.Query("id")
+	idParam := ctx.Param("id")
 	if idParam == "" {
 		errFormat := errs.NewBadRequest("Invalid id category")
 		ctx.JSON(errFormat.StatusCode(), errFormat)
