@@ -12,4 +12,5 @@ type RecipeService interface {
 	GetById(id uuid.UUID) (*dto.GetResponse, errs.ErrMessage)
 	Update(id uuid.UUID, payload *dto.UpdateRequest, userId uuid.UUID) (*dto.UpdateResponse, errs.ErrMessage)
 	Delete(id uuid.UUID, status bool) errs.ErrMessage
+	GetDetailRecipe(id uuid.UUID) (*dto.RecipeDetail, errs.ErrMessage)
 }
