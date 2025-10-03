@@ -10,6 +10,7 @@ import (
 	detailrecipeentity "github.com/Farhan1033/resep-masakan-monolith.git/internal/detail_recipe_module/entity"
 	ingrediententity "github.com/Farhan1033/resep-masakan-monolith.git/internal/ingredient_module/entity"
 	recipeentity "github.com/Farhan1033/resep-masakan-monolith.git/internal/recipe_module/entity"
+	stepentity "github.com/Farhan1033/resep-masakan-monolith.git/internal/recipe_steps_module/entity"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -39,6 +40,7 @@ func InitPostgres() {
 		ingrediententity.Ingredient{},
 		recipeentity.Recipe{},
 		detailrecipeentity.DetailRecipeEntity{},
+		stepentity.RecipeStep{},
 	)
 	if errMigrate != nil {
 		log.Fatal("Failed to migrate database")
