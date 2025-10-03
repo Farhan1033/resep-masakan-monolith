@@ -35,17 +35,23 @@ func main() {
 	authRepo := authrepositorypg.NewAuthRepository(postgressql.DB)
 	categoryRepo := categoryrepositorypg.NewCategoryRepository(postgressql.DB)
 	ingredientRepo := ingredientrepositorypg.NewIngredientRepository(postgressql.DB)
-	recipeRepo := reciperepositorypg.NewRecipeRepository(postgressql.DB)
 	detailRepo := detailreciperepositorypg.NewDetailRecipeRepository(postgressql.DB)
 	stepRepo := steprepositorypg.NewRecipeStepRepository(postgressql.DB)
+	recipeRepo := reciperepositorypg.NewRecipeRepository(postgressql.DB)
 
 	// Init Service
 	authService := authserviceimpl.NewAuthService(authRepo)
 	categoryService := categoryserviceimp.NewCategoryService(categoryRepo)
 	ingredientService := ingredientserviceimp.NewIngredientService(ingredientRepo)
-	recipeService := recipeserviceimp.NewRecipeService(recipeRepo, authRepo, categoryRepo)
 	detailService := detailrecipeserviceimpl.NewDetailRecipeService(detailRepo, authRepo)
 	stepService := stepserviceimpl.NewRecipeStepService(stepRepo)
+	recipeService := recipeserviceimp.NewRecipeService(
+		recipeRepo,
+		authRepo,
+		categoryRepo,
+		stepService,
+		detailService,
+	)
 
 	// Setup Router
 	publicGroup := r.Group("/api/v1")
@@ -56,9 +62,9 @@ func main() {
 	authhandler.NewAuthHandler(publicGroup, authService)
 	categoryhandler.NewCategoryHandler(privateGroup, categoryService)
 	ingredienthandler.NewIngredientHandler(privateGroup, ingredientService)
-	recipehandler.NewRecipeHandler(privateGroup, recipeService)
 	detailrecipehandler.NewDetailRecipeHandler(privateGroup, detailService)
 	stephandler.NewRecipeStepHandler(privateGroup, stepService)
+	recipehandler.NewRecipeHandler(privateGroup, recipeService)
 
 	r.GET("/", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{"Status": "Berhasil"})
