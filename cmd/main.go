@@ -18,6 +18,9 @@ import (
 	recipehandler "github.com/Farhan1033/resep-masakan-monolith.git/internal/recipe_module/handler"
 	reciperepositorypg "github.com/Farhan1033/resep-masakan-monolith.git/internal/recipe_module/repository/recipe_repository_pg"
 	recipeserviceimp "github.com/Farhan1033/resep-masakan-monolith.git/internal/recipe_module/service/recipe_service_imp"
+	stephandler "github.com/Farhan1033/resep-masakan-monolith.git/internal/recipe_steps_module/handler"
+	steprepositorypg "github.com/Farhan1033/resep-masakan-monolith.git/internal/recipe_steps_module/repository/step_repository_pg"
+	stepserviceimpl "github.com/Farhan1033/resep-masakan-monolith.git/internal/recipe_steps_module/service/step_service_impl"
 	"github.com/Farhan1033/resep-masakan-monolith.git/pkg/middleware"
 	"github.com/gin-gonic/gin"
 )
@@ -34,6 +37,7 @@ func main() {
 	ingredientRepo := ingredientrepositorypg.NewIngredientRepository(postgressql.DB)
 	recipeRepo := reciperepositorypg.NewRecipeRepository(postgressql.DB)
 	detailRepo := detailreciperepositorypg.NewDetailRecipeRepository(postgressql.DB)
+	stepRepo := steprepositorypg.NewRecipeStepRepository(postgressql.DB)
 
 	// Init Service
 	authService := authserviceimpl.NewAuthService(authRepo)
@@ -41,6 +45,7 @@ func main() {
 	ingredientService := ingredientserviceimp.NewIngredientService(ingredientRepo)
 	recipeService := recipeserviceimp.NewRecipeService(recipeRepo, authRepo, categoryRepo)
 	detailService := detailrecipeserviceimpl.NewDetailRecipeService(detailRepo, authRepo)
+	stepService := stepserviceimpl.NewRecipeStepService(stepRepo)
 
 	// Setup Router
 	publicGroup := r.Group("/api/v1")
@@ -53,6 +58,7 @@ func main() {
 	ingredienthandler.NewIngredientHandler(privateGroup, ingredientService)
 	recipehandler.NewRecipeHandler(privateGroup, recipeService)
 	detailrecipehandler.NewDetailRecipeHandler(privateGroup, detailService)
+	stephandler.NewRecipeStepHandler(privateGroup, stepService)
 
 	r.GET("/", func(ctx *gin.Context) {
 		ctx.JSON(200, gin.H{"Status": "Berhasil"})
