@@ -8,6 +8,7 @@ import (
 	"github.com/Farhan1033/resep-masakan-monolith.git/pkg/errs"
 	"github.com/Farhan1033/resep-masakan-monolith.git/pkg/validation"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
 type recipeStepSvc struct {
@@ -64,6 +65,31 @@ func (s *recipeStepSvc) Get() ([]stepdto.RecipeStepResponse, errs.ErrMessage) {
 	var result []stepdto.RecipeStepResponse
 	for _, step := range steps {
 		result = append(result, stepdto.RecipeStepResponse{
+			ID:          step.ID,
+			RecipeId:    step.RecipeId,
+			StepNumber:  step.StepNumber,
+			Instruction: step.Instruction,
+			CreatedAt:   step.CreatedAt,
+			UpdatedAt:   step.UpdatedAt,
+		})
+	}
+
+	return result, nil
+}
+
+func (s *recipeStepSvc) GetByRecipeId(recipeId uuid.UUID) ([]*stepdto.RecipeStepResponse, errs.ErrMessage) {
+	if recipeId == uuid.Nil {
+		return nil, errs.NewBadRequest("Invalid recipe ID")
+	}
+
+	steps, err := s.repo.GetById(recipeId)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]*stepdto.RecipeStepResponse, 0, len(steps))
+	for _, step := range steps {
+		result = append(result, &stepdto.RecipeStepResponse{
 			ID:          step.ID,
 			RecipeId:    step.RecipeId,
 			StepNumber:  step.StepNumber,
