@@ -77,24 +77,13 @@ func (s *DetailRecipeSvc) GetAllDetailRecipes() ([]dto.RecipeWithIngredientsResp
 	for _, item := range results {
 		if _, exists := recipeMap[item.RecipeID]; !exists {
 			recipeMap[item.RecipeID] = &dto.RecipeWithIngredientsResponse{
-				ID:                item.ID,
-				RecipeID:          item.RecipeID,
-				RecipeTitle:       item.RecipeTitle,
-				RecipeDescription: item.RecipeDescription,
-				DifficultLevel:    item.DifficultLevel,
-				PrepTime:          item.PrepTime,
-				CookTime:          item.CookTime,
-				TotalTime:         item.TotalTime,
-				Servings:          item.Servings,
-				OriginRegion:      item.OriginRegion,
-				ImageURL:          item.ImageURL,
-				IsActive:          item.IsActive,
-				Ingredients:       []dto.IngredientDetail{},
-				CreatedBy:         item.CreatedBy,
+				RecipeID:    item.RecipeID,
+				Ingredients: []dto.IngredientDetail{},
 			}
 		}
 
 		ingredient := dto.IngredientDetail{
+			ID:             item.ID,
 			IngredientID:   item.IngredientID,
 			IngredientName: item.IngredientName,
 			Quantity:       item.Quantity,
@@ -112,34 +101,20 @@ func (s *DetailRecipeSvc) GetAllDetailRecipes() ([]dto.RecipeWithIngredientsResp
 	return response, nil
 }
 
-func (s *DetailRecipeSvc) GetDetailRecipeById(id uuid.UUID) (*dto.RecipeWithIngredientsResponse, errs.ErrMessage) {
+func (s *DetailRecipeSvc) GetDetailRecipeById(id uuid.UUID) (*dto.DetailRecipeResponse, errs.ErrMessage) {
 	result, err := s.repo.GetById(id)
 	if err != nil {
 		return nil, errs.NewInternalServerError(err.Message())
 	}
 
-	response := &dto.RecipeWithIngredientsResponse{
-		ID:                result.ID,
-		RecipeID:          result.RecipeID,
-		RecipeTitle:       result.RecipeTitle,
-		RecipeDescription: result.RecipeDescription,
-		DifficultLevel:    result.DifficultLevel,
-		PrepTime:          result.PrepTime,
-		CookTime:          result.CookTime,
-		TotalTime:         result.TotalTime,
-		Servings:          result.Servings,
-		OriginRegion:      result.OriginRegion,
-		ImageURL:          result.ImageURL,
-		IsActive:          result.IsActive,
-		Ingredients: []dto.IngredientDetail{
-			{
-				IngredientID:   result.IngredientID,
-				IngredientName: result.IngredientName,
-				Quantity:       result.Quantity,
-				Unit:           result.Unit,
-			},
-		},
-		CreatedBy: result.CreatedBy,
+	response := &dto.DetailRecipeResponse{
+		ID:           result.ID,
+		RecipeID:     result.RecipeID,
+		IngredientID: result.IngredientID,
+		Quantity:     result.Quantity,
+		Unit:         result.Unit,
+		CreatedAt:    result.CreatedAt,
+		CreatedBy:    result.CreatedBy,
 	}
 
 	return response, nil
@@ -155,28 +130,28 @@ func (s *DetailRecipeSvc) GetDetailRecipeByRecipeId(recipeId uuid.UUID) (*dto.Re
 		return nil, err
 	}
 
+	if len(result) == 0 {
+		return nil, errs.NewNotFound("Recipe not found")
+	}
+
+	firstItem := result[0]
+
+	ingredients := make([]dto.IngredientDetail, 0, len(result))
+	for _, item := range result {
+		ingredient := dto.IngredientDetail{
+			ID:             firstItem.ID,
+			IngredientID:   item.IngredientID,
+			IngredientName: item.IngredientName,
+			Quantity:       item.Quantity,
+			Unit:           item.Unit,
+		}
+
+		ingredients = append(ingredients, ingredient)
+	}
+
 	response := &dto.RecipeWithIngredientsResponse{
-		ID:                result.ID,
-		RecipeID:          result.RecipeID,
-		RecipeTitle:       result.RecipeTitle,
-		RecipeDescription: result.RecipeDescription,
-		DifficultLevel:    result.DifficultLevel,
-		PrepTime:          result.PrepTime,
-		CookTime:          result.CookTime,
-		TotalTime:         result.TotalTime,
-		Servings:          result.Servings,
-		OriginRegion:      result.OriginRegion,
-		ImageURL:          result.ImageURL,
-		IsActive:          result.IsActive,
-		Ingredients: []dto.IngredientDetail{
-			{
-				IngredientID:   result.IngredientID,
-				IngredientName: result.IngredientName,
-				Quantity:       result.Quantity,
-				Unit:           result.Unit,
-			},
-		},
-		CreatedBy: result.CreatedBy,
+		RecipeID:    firstItem.RecipeID,
+		Ingredients: ingredients,
 	}
 
 	return response, nil
