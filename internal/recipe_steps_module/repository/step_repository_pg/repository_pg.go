@@ -35,13 +35,13 @@ func (r *recipeStepRepo) Get() ([]stepentity.RecipeStep, errs.ErrMessage) {
 }
 
 func (r *recipeStepRepo) Update(id uint, dto *stepdto.UpdateRequest) errs.ErrMessage {
-    if err := r.db.Model(&stepentity.RecipeStep{}).
-        Where("id = ?", id).
-        Updates(dto).Error; err != nil {
-        return errs.NewInternalServerError("Failed to update recipe step: " + err.Error())
-    }
+	if err := r.db.Model(&stepentity.RecipeStep{}).
+		Where("id = ?", id).
+		Updates(dto).Error; err != nil {
+		return errs.NewInternalServerError("Failed to update recipe step: " + err.Error())
+	}
 
-    return nil
+	return nil
 }
 
 func (r *recipeStepRepo) Delete(id uint) errs.ErrMessage {
@@ -60,4 +60,18 @@ func (r *recipeStepRepo) GetMaxStepNumberByRecipe(recipeId uuid.UUID) (int, errs
 		return 0, errs.NewInternalServerError("failed to get max step number: " + err.Error())
 	}
 	return maxStep, nil
+}
+
+func (r *recipeStepRepo) GetById(RecipeId uuid.UUID) ([]stepentity.RecipeStep, errs.ErrMessage) {
+	var steps []stepentity.RecipeStep
+
+	if err := r.db.Where("recipe_id = ?", RecipeId).Order("step_number ASC").Find(&steps).Error; err != nil {
+		return nil, errs.NewInternalServerError(err.Error())
+	}
+
+	if len(steps) == 0 {
+		return nil, errs.NewNotFound("Steps not found for this recipe")
+	}
+
+	return steps, nil
 }
