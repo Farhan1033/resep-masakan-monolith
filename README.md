@@ -89,6 +89,7 @@ Semua *endpoint* selain `/auth/register` dan `/auth/login` **membutuhkan JWT Aut
 | **Recipe** | `POST` | `/api/v1/recipe/create` | Tambah resep baru. |
 | | `GET` | `/api/v1/recipes` | Ambil semua resep. |
 | | `GET` | `/api/v1/recipe/:id` | Ambil resep berdasarkan ID. |
+| | `GET` | `/api/v1/recipe/detail/:id` | Ambil detail lengkap dari sebuah resep. | 
 | | `PUT` | `/api/v1/recipe/update/:id` | Update resep. |
 | | `DELETE` | `/api/v1/recipe/delete/:id` | Hapus resep. |
 | **Detail Recipe** | `POST` | `/api/v1/recipe-ingredient/create` | Tambah bahan ke resep. |
@@ -149,7 +150,7 @@ go run ./cmd/
 Aplikasi akan berjalan pada port 8080 secara *default*.
 
 ```
-http://localhost:8080/api/v1
+http://localhost:8080/api/v1 (Jika dijalankan di lokal)
 ```
 
 -----
