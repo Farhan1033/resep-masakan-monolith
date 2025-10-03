@@ -3,6 +3,8 @@ package dto
 import (
 	"time"
 
+	"github.com/Farhan1033/resep-masakan-monolith.git/internal/detail_recipe_module/dto"
+	stepdto "github.com/Farhan1033/resep-masakan-monolith.git/internal/recipe_steps_module/dto"
 	"github.com/google/uuid"
 )
 
@@ -118,4 +120,24 @@ type RecipeWithRelations struct {
 	CategoryName   string    `json:"category_name"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+type RecipeDetail struct {
+	ID             uuid.UUID                          `json:"id"`
+	Title          string                             `json:"title"`
+	Description    string                             `json:"description"`
+	DifficultLevel string                             `json:"difficult_level"`
+	PrepTime       int                                `json:"prep_time"`
+	CookTime       int                                `json:"cook_time"`
+	TotalTime      int                                `json:"total_time"`
+	Servings       int                                `json:"servings"`
+	OriginRegion   string                             `json:"origin_region"`
+	ImageUrl       string                             `json:"image_url"`
+	IsActive       bool                               `json:"is_active"`
+	Categories     *Category                          `json:"category"`
+	Steps          []*stepdto.RecipeStepResponse      `json:"step"`
+	Ingredients    *dto.RecipeWithIngredientsResponse `json:"ingredients"`
+	CreatedBy      *CreatedBy                         `json:"created_by"`
+	CreatedAt      time.Time                          `json:"created_at"`
+	UpdatedAt      time.Time                          `json:"updated_at"`
 }
