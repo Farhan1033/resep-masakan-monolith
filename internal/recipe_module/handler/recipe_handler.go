@@ -23,6 +23,7 @@ func NewRecipeHandler(r *gin.RouterGroup, svc recipeservice.RecipeService) {
 	r.GET("/recipe/:id", h.GetById)
 	r.PUT("/recipe/update/:id", h.Update)
 	r.DELETE("/recipe/delete/:id", h.Delete)
+	r.GET("/recipe/detail/:id", h.GetDetailById)
 }
 
 func (h *RecipeHandler) Create(ctx *gin.Context) {
@@ -40,7 +41,7 @@ func (h *RecipeHandler) Create(ctx *gin.Context) {
 		return
 	}
 
-	response, errResponse := h.svc.Create(&payload, idParse, )
+	response, errResponse := h.svc.Create(&payload, idParse)
 	if errResponse != nil {
 		ctx.JSON(errResponse.StatusCode(), errResponse)
 		return
@@ -149,4 +150,22 @@ func (h *RecipeHandler) Delete(ctx *gin.Context) {
 	}
 
 	helper.OKResponse(ctx, message, nil)
+}
+
+func (h *RecipeHandler) GetDetailById(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, parseErr := uuid.Parse(idStr)
+	if parseErr != nil {
+		errFormat := errs.NewBadRequest("Invalid recipe ID format")
+		ctx.JSON(errFormat.StatusCode(), errFormat)
+		return
+	}
+
+	recipe, err := h.svc.GetDetailRecipe(id)
+	if err != nil {
+		ctx.JSON(err.StatusCode(), err)
+		return
+	}
+
+	helper.OKResponse(ctx, "Successfully retrieved recipe detail", recipe)
 }
