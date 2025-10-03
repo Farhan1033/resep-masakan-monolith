@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"time"
 
 	"github.com/Farhan1033/resep-masakan-monolith.git/infra/config"
 	postgressql "github.com/Farhan1033/resep-masakan-monolith.git/infra/postgres"
@@ -25,6 +26,7 @@ import (
 	steprepositorypg "github.com/Farhan1033/resep-masakan-monolith.git/internal/recipe_steps_module/repository/step_repository_pg"
 	stepserviceimpl "github.com/Farhan1033/resep-masakan-monolith.git/internal/recipe_steps_module/service/step_service_impl"
 	"github.com/Farhan1033/resep-masakan-monolith.git/pkg/middleware"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -49,6 +51,18 @@ func main() {
 
 	// Setup Gin
 	r := gin.Default()
+
+	gin.SetMode(gin.ReleaseMode)
+	log.Println("Gin mode: RELEASE")
+
+	r.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	// Init Repository
 	authRepo := authrepositorypg.NewAuthRepository(postgressql.DB)
@@ -86,12 +100,15 @@ func main() {
 	recipehandler.NewRecipeHandler(privateGroup, recipeService)
 
 	// Health Check
-	r.GET("/", func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{"status": "ok"})
+	r.GET("/kaithheathcheck", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"status":  "healthy",
+			"message": "Recipe App is running smoothly 🚀",
+		})
 	})
 
-	infoLogger.Println("Server running at http://localhost:8080")
-	if err := r.Run(":8080"); err != nil {
+	infoLogger.Println("Server running")
+	if err := r.Run("0.0.0.0:" + config.GetKey("APP_PORT")); err != nil {
 		errorLogger.Fatalf("Failed to start server: %v", err)
 	}
 }
