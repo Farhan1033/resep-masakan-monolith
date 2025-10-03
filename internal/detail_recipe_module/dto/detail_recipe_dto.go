@@ -7,25 +7,14 @@ import (
 )
 
 type RecipeWithIngredients struct {
-	ID                uuid.UUID `json:"id"`
-	RecipeID          uuid.UUID `json:"recipe_id"`
-	RecipeTitle       string    `json:"title"`
-	RecipeDescription string    `json:"description"`
-	DifficultLevel    string    `json:"difficult_level"`
-	PrepTime          int       `json:"prep_time"`
-	CookTime          int       `json:"cook_time"`
-	TotalTime         int       `json:"total_time"`
-	Servings          int       `json:"servings"`
-	OriginRegion      string    `json:"origin_region"`
-	ImageURL          string    `json:"image_url"`
-	IsActive          bool      `json:"is_active"`
-	IngredientID      uuid.UUID `json:"ingredient_id"`
-	IngredientName    string    `json:"ingredient_name"`
-	Quantity          float64   `json:"quantity"`
-	Unit              string    `json:"unit"`
-	CreatedAt         time.Time `json:"created_at"`
-	UpdatedAt         time.Time `json:"updated_at"`
-	CreatedBy         string    `json:"created_by"`
+	ID             uuid.UUID `json:"id"`
+	RecipeID       uuid.UUID `json:"recipe_id"`
+	IngredientID   uuid.UUID `json:"ingredient_id"`
+	IngredientName string    `json:"ingredient_name"`
+	Quantity       float64   `json:"quantity"`
+	Unit           string    `json:"unit"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
 
 type CreateDetailRecipeRequest struct {
@@ -53,6 +42,7 @@ type DetailRecipeResponse struct {
 }
 
 type IngredientDetail struct {
+	ID             uuid.UUID `json:"id"`
 	IngredientID   uuid.UUID `json:"ingredient_id"`
 	IngredientName string    `json:"ingredient_name"`
 	Quantity       float64   `json:"quantity"`
@@ -60,18 +50,6 @@ type IngredientDetail struct {
 }
 
 type RecipeWithIngredientsResponse struct {
-	ID                uuid.UUID          `json:"id"`
-	RecipeID          uuid.UUID          `json:"recipe_id"`
-	RecipeTitle       string             `json:"title"`
-	RecipeDescription string             `json:"description"`
-	DifficultLevel    string             `json:"difficult_level"`
-	PrepTime          int                `json:"prep_time"`
-	CookTime          int                `json:"cook_time"`
-	TotalTime         int                `json:"total_time"`
-	Servings          int                `json:"servings"`
-	OriginRegion      string             `json:"origin_region"`
-	ImageURL          string             `json:"image_url"`
-	IsActive          bool               `json:"is_active"`
-	Ingredients       []IngredientDetail `json:"ingredients"`
-	CreatedBy         string             `json:"created_by"`
+	RecipeID    uuid.UUID          `json:"recipe_id"`
+	Ingredients []IngredientDetail `json:"ingredients"`
 }
