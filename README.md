@@ -97,6 +97,10 @@ Semua *endpoint* selain `/auth/register` dan `/auth/login` **membutuhkan JWT Aut
 | | `GET` | `/api/v1/ingredient/recipe/:recipe_id` | Ambil bahan dari suatu resep. |
 | | `PUT` | `/api/v1/recipe-ingredient/update/:id` | Update detail resep. |
 | | `DELETE` | `/api/v1/recipe-ingredient/delete/:id` | Hapus detail resep. |
+| **Recipe Steps** | `POST` | `/api/v1/step/create`| Tambah langkah-langkah ke resep. |
+| | `GET` | `/api/v1/recipe/step` | Ambil semua langkah-langkah resep. |
+| | `PUT` | `/api/v1/step/update/:id` | Update langkah-langkah resep. |
+| | `DELETE` | `/api/v1/step/delete/:id` | Hapus langkah-langkah resep. |
 
 ---
 
