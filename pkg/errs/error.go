@@ -38,7 +38,7 @@ func NewNotFound(message string) ErrMessage {
 	return &ErrMessageData{
 		ErrMessage:    message,
 		ErrStatusCode: http.StatusNotFound,
-		ErrError:      "DATA_NOT_FOUND",
+		ErrError:      "NOT_FOUND",
 	}
 }
 
@@ -46,7 +46,7 @@ func NewFound(message string) ErrMessage {
 	return &ErrMessageData{
 		ErrMessage:    message,
 		ErrStatusCode: http.StatusFound,
-		ErrError:      "DATA_ALREADY_EXIST",
+		ErrError:      "FOUND",
 	}
 }
 
@@ -62,7 +62,7 @@ func NewUnauthorized(message string) ErrMessage {
 	return &ErrMessageData{
 		ErrStatusCode: http.StatusUnauthorized,
 		ErrMessage:    message,
-		ErrError:      "UNAUTHORIZED_USER",
+		ErrError:      "UNAUTHORIZED",
 	}
 }
 
@@ -70,7 +70,7 @@ func NewUnprocessableEntity(message string) ErrMessage {
 	return &ErrMessageData{
 		ErrStatusCode: http.StatusUnprocessableEntity,
 		ErrMessage:    message,
-		ErrError:      "INVALID_REQUEST_BODY",
+		ErrError:      "UNPROCESSABLE_ENTITY",
 	}
 }
 
@@ -78,6 +78,6 @@ func NewForbidden(message string) ErrMessage {
 	return &ErrMessageData{
 		ErrStatusCode: http.StatusForbidden,
 		ErrMessage:    message,
-		ErrError:      "FORBIDDEN_USER",
+		ErrError:      "FORBIDDEN",
 	}
 }
