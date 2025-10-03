@@ -14,16 +14,13 @@ type RecipeRepo struct {
 }
 
 func NewRecipeRepository(db *gorm.DB) reciperepository.RecipeRepository {
-	return &RecipeRepo{
-		db: db,
-	}
+	return &RecipeRepo{db: db}
 }
 
 func (r *RecipeRepo) Create(recipe *recipeentity.Recipe) (*recipeentity.Recipe, errs.ErrMessage) {
 	if err := r.db.Create(recipe).Error; err != nil {
 		return nil, errs.NewInternalServerError(err.Error())
 	}
-
 	return recipe, nil
 }
 
@@ -31,8 +28,10 @@ func (r *RecipeRepo) GetByPagination(limit, offset int) ([]dto.RecipeWithRelatio
 	var recipes []dto.RecipeWithRelations
 	var total int64
 
-	if err := r.db.Table("recipe").Count(&total).Error; err != nil {
-		return nil, 0, errs.NewNotFound("Data not found!")
+	if err := r.db.Model(&recipeentity.Recipe{}).
+		Where("is_active = ?", true).
+		Count(&total).Error; err != nil {
+		return nil, 0, errs.NewInternalServerError(err.Error())
 	}
 
 	if err := r.db.Table("recipe").
@@ -64,6 +63,10 @@ func (r *RecipeRepo) GetByPagination(limit, offset int) ([]dto.RecipeWithRelatio
 		return nil, 0, errs.NewInternalServerError(err.Error())
 	}
 
+	if len(recipes) == 0 {
+		return nil, 0, errs.NewNotFound("No recipes found")
+	}
+
 	return recipes, int(total), nil
 }
 
@@ -92,9 +95,13 @@ func (r *RecipeRepo) GetById(id uuid.UUID) (*dto.RecipeWithRelations, errs.ErrMe
         `).
 		Joins("LEFT JOIN users ON users.id = recipe.created_by").
 		Joins("LEFT JOIN category ON category.id = recipe.category_id").
-		Where("recipe.id = ?", id).
+		Where("recipe.id = ? AND recipe.is_active = ?", id, true).
 		Scan(&recipe).Error; err != nil {
-		return nil, errs.NewNotFound("Data not found!")
+		return nil, errs.NewInternalServerError(err.Error())
+	}
+
+	if recipe.ID == uuid.Nil {
+		return nil, errs.NewNotFound("Recipe not found or inactive")
 	}
 
 	return &recipe, nil
@@ -124,6 +131,9 @@ func (r *RecipeRepo) Update(id uuid.UUID, recipe *recipeentity.Recipe) (*recipee
 
 	var updated recipeentity.Recipe
 	if err := r.db.Where("id = ?", id).First(&updated).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, errs.NewNotFound("Recipe not found after update")
+		}
 		return nil, errs.NewInternalServerError(err.Error())
 	}
 
@@ -131,10 +141,16 @@ func (r *RecipeRepo) Update(id uuid.UUID, recipe *recipeentity.Recipe) (*recipee
 }
 
 func (r *RecipeRepo) Delete(id uuid.UUID, status bool) errs.ErrMessage {
-	if err := r.db.Model(&recipeentity.Recipe{}).
+	res := r.db.Model(&recipeentity.Recipe{}).
 		Where("id = ?", id).
-		Update("is_active", status).Error; err != nil {
-		return errs.NewInternalServerError(err.Error())
+		Update("is_active", status)
+
+	if res.Error != nil {
+		return errs.NewInternalServerError(res.Error.Error())
+	}
+
+	if res.RowsAffected == 0 {
+		return errs.NewNotFound("Recipe not found")
 	}
 
 	return nil

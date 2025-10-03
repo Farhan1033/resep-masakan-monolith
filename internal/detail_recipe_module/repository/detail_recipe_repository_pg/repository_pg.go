@@ -1,7 +1,7 @@
 package detailreciperepositorypg
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/Farhan1033/resep-masakan-monolith.git/internal/detail_recipe_module/dto"
 	detailrecipeentity "github.com/Farhan1033/resep-masakan-monolith.git/internal/detail_recipe_module/entity"
@@ -23,7 +23,7 @@ func NewDetailRecipeRepository(db *gorm.DB) detailreciperepository.DetailRecipeR
 
 func (r *DetailRecipeRepo) Create(detail *detailrecipeentity.DetailRecipeEntity) (*detailrecipeentity.DetailRecipeEntity, errs.ErrMessage) {
 	if err := r.db.Create(detail).Error; err != nil {
-		return nil, errs.NewInternalServerError(err.Error())
+		return nil, errs.NewInternalServerError(fmt.Sprintf("failed to create detail recipe: %v", err))
 	}
 	return detail, nil
 }
@@ -43,27 +43,24 @@ func (r *DetailRecipeRepo) Get() ([]dto.RecipeWithIngredients, errs.ErrMessage) 
         `).
 		Joins("JOIN ingredient i ON i.id = ri.ingredient_id").
 		Scan(&results).Error; err != nil {
-
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errs.NewNotFound("Data not found!")
-		}
-		return nil, errs.NewInternalServerError(err.Error())
+		return nil, errs.NewInternalServerError(fmt.Sprintf("failed to get detail recipes: %v", err))
 	}
 
+	// kalau kosong, tetap return slice kosong (bukan error)
 	return results, nil
 }
 
 func (r *DetailRecipeRepo) GetById(id uuid.UUID) (*detailrecipeentity.DetailRecipeEntity, errs.ErrMessage) {
-	var result *detailrecipeentity.DetailRecipeEntity
+	var result detailrecipeentity.DetailRecipeEntity
 
 	if err := r.db.First(&result, "id = ?", id).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errs.NewNotFound("Data not found!")
+		if err == gorm.ErrRecordNotFound {
+			return nil, errs.NewNotFound(fmt.Sprintf("detail recipe with id '%s' not found", id))
 		}
-		return nil, errs.NewFound(err.Error())
+		return nil, errs.NewInternalServerError(fmt.Sprintf("failed to get detail recipe by id: %v", err))
 	}
 
-	return result, nil
+	return &result, nil
 }
 
 func (r *DetailRecipeRepo) GetByRecipeId(idRecipe uuid.UUID) ([]dto.RecipeWithIngredients, errs.ErrMessage) {
@@ -82,10 +79,7 @@ func (r *DetailRecipeRepo) GetByRecipeId(idRecipe uuid.UUID) ([]dto.RecipeWithIn
 		Joins("JOIN ingredient i ON i.id = ri.ingredient_id").
 		Where("ri.recipe_id = ?", idRecipe).
 		Scan(&result).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, errs.NewNotFound("Recipe not found!")
-		}
-		return nil, errs.NewInternalServerError(err.Error())
+		return nil, errs.NewInternalServerError(fmt.Sprintf("failed to get detail recipes by recipe id: %v", err))
 	}
 
 	return result, nil
@@ -99,17 +93,24 @@ func (r *DetailRecipeRepo) Update(id uuid.UUID, detail *detailrecipeentity.Detai
 		"unit":          detail.Unit,
 	}
 
-	if err := r.db.Model(&detailrecipeentity.DetailRecipeEntity{}).Where("id = ?", id).
-		Updates(update).Error; err != nil {
-		return errs.NewInternalServerError(err.Error())
+	result := r.db.Model(&detailrecipeentity.DetailRecipeEntity{}).Where("id = ?", id).Updates(update)
+	if result.Error != nil {
+		return errs.NewInternalServerError(fmt.Sprintf("failed to update detail recipe: %v", result.Error))
+	}
+	if result.RowsAffected == 0 {
+		return errs.NewNotFound(fmt.Sprintf("detail recipe with id '%s' not found", id))
 	}
 
 	return nil
 }
 
 func (r *DetailRecipeRepo) Delete(id uuid.UUID) errs.ErrMessage {
-	if err := r.db.Delete(&detailrecipeentity.DetailRecipeEntity{}, "id = ?", id).Error; err != nil {
-		return errs.NewInternalServerError(err.Error())
+	result := r.db.Delete(&detailrecipeentity.DetailRecipeEntity{}, "id = ?", id)
+	if result.Error != nil {
+		return errs.NewInternalServerError(fmt.Sprintf("failed to delete detail recipe: %v", result.Error))
+	}
+	if result.RowsAffected == 0 {
+		return errs.NewNotFound(fmt.Sprintf("detail recipe with id '%s' not found", id))
 	}
 	return nil
 }

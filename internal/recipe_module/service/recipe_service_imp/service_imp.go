@@ -49,7 +49,7 @@ func (s *RecipeSvc) Create(payload *dto.CreateRequest, IdUser uuid.UUID) (*dto.C
 
 	user, errUser := s.repoUser.GetById(IdUser)
 	if errUser != nil {
-		return nil, errs.NewNotFound(errUser.Error())
+		return nil, errUser
 	}
 
 	userId := &dto.CreatedBy{
@@ -58,9 +58,8 @@ func (s *RecipeSvc) Create(payload *dto.CreateRequest, IdUser uuid.UUID) (*dto.C
 	}
 
 	category, errCategory := s.repoCategory.GetById(payload.CategoryId)
-
 	if errCategory != nil {
-		return nil, errs.NewNotFound(errCategory.Error())
+		return nil, errCategory
 	}
 
 	categoryId := &dto.Category{
@@ -84,7 +83,7 @@ func (s *RecipeSvc) Create(payload *dto.CreateRequest, IdUser uuid.UUID) (*dto.C
 
 	recipe, err := s.repoRecipe.Create(request)
 	if err != nil {
-		return nil, errs.NewInternalServerError(err.Error())
+		return nil, err
 	}
 
 	response := &dto.CreateResponse{
@@ -119,7 +118,7 @@ func (s *RecipeSvc) GetByPagination(page, limit int) (*dto.PaginatedResponse, er
 
 	recipes, total, err := s.repoRecipe.GetByPagination(limit, offset)
 	if err != nil {
-		return nil, errs.NewInternalServerError(err.Error())
+		return nil, err
 	}
 
 	if len(recipes) == 0 {
@@ -168,7 +167,7 @@ func (s *RecipeSvc) GetByPagination(page, limit int) (*dto.PaginatedResponse, er
 func (s *RecipeSvc) GetById(id uuid.UUID) (*dto.GetResponse, errs.ErrMessage) {
 	recipe, err := s.repoRecipe.GetById(id)
 	if err != nil {
-		return nil, errs.NewNotFound("Recipe not found!")
+		return nil, err
 	}
 
 	return &dto.GetResponse{
@@ -245,9 +244,9 @@ func (s *RecipeSvc) Update(id uuid.UUID, payload *dto.UpdateRequest, userId uuid
 }
 
 func (s *RecipeSvc) Delete(id uuid.UUID, status bool) errs.ErrMessage {
-	response := s.repoRecipe.Delete(id, status)
-	if response != nil {
-		return errs.NewInternalServerError(response.Error())
+	err := s.repoRecipe.Delete(id, status)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -256,17 +255,17 @@ func (s *RecipeSvc) Delete(id uuid.UUID, status bool) errs.ErrMessage {
 func (s *RecipeSvc) GetDetailRecipe(id uuid.UUID) (*dto.RecipeDetail, errs.ErrMessage) {
 	recipe, errMsgRecipe := s.repoRecipe.GetById(id)
 	if errMsgRecipe != nil {
-		return nil, errs.NewNotFound("Recipe not found!")
+		return nil, errMsgRecipe
 	}
 
 	steps, errMsgStep := s.svcStep.GetByRecipeId(id)
 	if errMsgStep != nil {
-		return nil, errs.NewNotFound("Step not found!")
+		return nil, errMsgStep
 	}
 
 	ingredients, errMsgIngredient := s.svcIngredient.GetDetailRecipeByRecipeId(id)
 	if errMsgIngredient != nil {
-		return nil, errs.NewNotFound("Ingredient not found!")
+		return nil, errMsgIngredient
 	}
 
 	response := &dto.RecipeDetail{

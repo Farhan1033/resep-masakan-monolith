@@ -37,7 +37,7 @@ func (s *DetailRecipeSvc) CreateDetailRecipe(id uuid.UUID, req *dto.CreateDetail
 
 	getUser, errUser := s.repoUser.GetById(id)
 	if errUser != nil {
-		return nil, errs.NewNotFound(errUser.Message())
+		return nil, errUser
 	}
 
 	entity := &detailrecipeentity.DetailRecipeEntity{
@@ -69,7 +69,7 @@ func (s *DetailRecipeSvc) CreateDetailRecipe(id uuid.UUID, req *dto.CreateDetail
 func (s *DetailRecipeSvc) GetAllDetailRecipes() ([]dto.RecipeWithIngredientsResponse, errs.ErrMessage) {
 	results, err := s.repo.Get()
 	if err != nil {
-		return nil, errs.NewInternalServerError(err.Message())
+		return nil, err
 	}
 
 	recipeMap := make(map[uuid.UUID]*dto.RecipeWithIngredientsResponse)
@@ -104,7 +104,7 @@ func (s *DetailRecipeSvc) GetAllDetailRecipes() ([]dto.RecipeWithIngredientsResp
 func (s *DetailRecipeSvc) GetDetailRecipeById(id uuid.UUID) (*dto.DetailRecipeResponse, errs.ErrMessage) {
 	result, err := s.repo.GetById(id)
 	if err != nil {
-		return nil, errs.NewInternalServerError(err.Message())
+		return nil, err
 	}
 
 	response := &dto.DetailRecipeResponse{

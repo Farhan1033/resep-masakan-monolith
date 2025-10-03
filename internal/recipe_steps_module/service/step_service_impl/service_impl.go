@@ -108,9 +108,19 @@ func (s *recipeStepSvc) Update(id uint, payload *stepdto.UpdateRequest) errs.Err
 		return errs.NewBadRequest(formatError.Message())
 	}
 
-	return s.repo.Update(id, payload)
+	err := s.repo.Update(id, payload)
+	if err != nil {
+		return err
+	}
+
+	return err
 }
 
 func (s *recipeStepSvc) Delete(id uint) errs.ErrMessage {
-	return s.repo.Delete(id)
+	err := s.repo.Delete(id)
+	if err != nil {
+		return err
+	}
+
+	return err
 }

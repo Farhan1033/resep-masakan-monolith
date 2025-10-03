@@ -32,7 +32,7 @@ func (s *CategorySvc) Create(payload *dto.CreateCategoryRequest) (*dto.CategoryR
 	}
 
 	if _, err := s.repo.GetByName(payload.Name); err == nil {
-		return nil, errs.NewFound("This category already exists")
+		return nil, err
 	}
 
 	craeteNew := &categoryentity.Category{
@@ -41,7 +41,7 @@ func (s *CategorySvc) Create(payload *dto.CreateCategoryRequest) (*dto.CategoryR
 
 	createCategory, err := s.repo.Create(craeteNew)
 	if err != nil {
-		return nil, errs.NewInternalServerError(err.Error())
+		return nil, err
 	}
 
 	response := &dto.CategoryResponse{
@@ -57,7 +57,7 @@ func (s *CategorySvc) Create(payload *dto.CreateCategoryRequest) (*dto.CategoryR
 func (s *CategorySvc) Get() ([]*dto.CategoryResponse, errs.ErrMessage) {
 	categories, err := s.repo.Get()
 	if err != nil {
-		return nil, errs.NewInternalServerError(err.Error())
+		return nil, err
 	}
 
 	if len(categories) == 0 {
@@ -80,12 +80,12 @@ func (s *CategorySvc) Get() ([]*dto.CategoryResponse, errs.ErrMessage) {
 
 func (s *CategorySvc) Delete(id uuid.UUID) errs.ErrMessage {
 	if _, err := s.repo.GetById(id); err != nil {
-		return errs.NewFound(err.Error())
+		return err
 	}
 
-	response := s.repo.Delete(id, false)
-	if response != nil {
-		return errs.NewInternalServerError(response.Error())
+	err := s.repo.Delete(id, false)
+	if err != nil {
+		return err
 	}
 
 	return nil

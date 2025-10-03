@@ -29,27 +29,33 @@ func NewAuthService(repo authrepository.AuthRepostiory) authservice.AuthService 
 func (s *AuthSvc) Create(payload *dto.CreateRequest) (*dto.CreateAuthResponse, errs.ErrMessage) {
 	if err := s.validate.Struct(payload); err != nil {
 		formatedValidation := validation.FormatValidationError(err)
-		return nil, errs.NewBadRequest(fmt.Sprintf("Validation failed: %s", formatedValidation))
+		return nil, errs.NewBadRequest(fmt.Sprintf("validation failed: %s", formatedValidation))
 	}
 
-	_, err := s.repo.GetByEmail(payload.Email)
-	if err == nil {
-		return nil, errs.NewBadRequest("Email already exist!")
+	existingUser, err := s.repo.GetByEmail(payload.Email)
+	if err != nil {
+		if err.StatusCode() != 404 {
+			return nil, errs.NewInternalServerError(fmt.Sprintf("failed to check existing user: %s", err.Message()))
+		}
+	} else if existingUser != nil {
+		return nil, errs.NewBadRequest("user with this email already exists")
 	}
 
-	hash, _ := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
-	payload.Password = string(hash)
+	hashedPassword, hashErr := bcrypt.GenerateFromPassword([]byte(payload.Password), bcrypt.DefaultCost)
+	if hashErr != nil {
+		return nil, errs.NewInternalServerError(fmt.Sprintf("failed to hash password: %v", hashErr))
+	}
 
 	userPayload := &entity.User{
 		Email:    payload.Email,
 		UserName: payload.UserName,
 		FullName: payload.FullName,
-		Password: payload.Password,
+		Password: string(hashedPassword),
 	}
 
 	registeredUser, err := s.repo.CreateUser(userPayload)
 	if err != nil {
-		return nil, errs.NewInternalServerError(err.Error())
+		return nil, err
 	}
 
 	response := &dto.CreateAuthResponse{
@@ -66,25 +72,24 @@ func (s *AuthSvc) Create(payload *dto.CreateRequest) (*dto.CreateAuthResponse, e
 func (s *AuthSvc) Login(payload *dto.LoginRequest) (*dto.LoginResponse, errs.ErrMessage) {
 	if err := s.validate.Struct(payload); err != nil {
 		formatedValidation := validation.FormatValidationError(err)
-		return nil, errs.NewBadRequest(fmt.Sprintf("Validation failed: %s", formatedValidation))
+		return nil, errs.NewBadRequest(fmt.Sprintf("validation failed: %s", formatedValidation))
 	}
 
 	existingUser, err := s.repo.GetByEmail(payload.Email)
 	if err != nil {
-		return nil, errs.NewInternalServerError(err.Error())
+		if err.StatusCode() == 404 {
+			return nil, errs.NewUnauthorized("invalid email or password")
+		}
+		return nil, errs.NewInternalServerError(fmt.Sprintf("failed to get user: %s", err.Message()))
 	}
 
-	if existingUser == nil {
-		return nil, errs.NewNotFound(fmt.Sprintf("User with this email %s not found!", payload.Email))
+	if err := bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(payload.Password)); err != nil {
+		return nil, errs.NewUnauthorized("invalid email or password")
 	}
 
-	if bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(payload.Password)) != nil {
-		return nil, errs.NewBadRequest("Wrong password")
-	}
-
-	token, err := middleware.CreateToken(existingUser.ID, existingUser.Email)
-	if err != nil {
-		return nil, errs.NewInternalServerError(err.Error())
+	token, tokenErr := middleware.CreateToken(existingUser.ID, existingUser.Email)
+	if tokenErr != nil {
+		return nil, errs.NewInternalServerError(fmt.Sprintf("failed to generate token: %s", tokenErr.Message()))
 	}
 
 	data := &dto.LoginDataResponse{

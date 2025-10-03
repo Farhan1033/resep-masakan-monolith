@@ -15,24 +15,27 @@ type IngredientRepo struct {
 }
 
 func NewIngredientRepository(db *gorm.DB) ingredientrepository.IngredientRepository {
-	return &IngredientRepo{
-		db: db,
-	}
+	return &IngredientRepo{db: db}
 }
 
 func (r *IngredientRepo) Create(ingredient *ingrediententity.Ingredient) (*ingrediententity.Ingredient, errs.ErrMessage) {
 	if err := r.db.Create(ingredient).Error; err != nil {
 		return nil, errs.NewInternalServerError(err.Error())
 	}
-
 	return ingredient, nil
 }
 
 func (r *IngredientRepo) Get() ([]ingrediententity.Ingredient, errs.ErrMessage) {
 	var payload []ingrediententity.Ingredient
 
-	if err := r.db.Where("is_active = true").Order("name ASC").Find(&payload).Error; err != nil {
-		return nil, errs.NewNotFound("Data not found!")
+	if err := r.db.Where("is_active = true").
+		Order("name ASC").
+		Find(&payload).Error; err != nil {
+		return nil, errs.NewInternalServerError(err.Error())
+	}
+
+	if len(payload) == 0 {
+		return nil, errs.NewNotFound("No ingredients found")
 	}
 
 	return payload, nil
@@ -42,7 +45,10 @@ func (r *IngredientRepo) GetByName(name string) (*ingrediententity.Ingredient, e
 	var payload ingrediententity.Ingredient
 
 	if err := r.db.Where("name = ?", name).First(&payload).Error; err != nil {
-		return nil, errs.NewFound(fmt.Sprintf("This ingredient %s already exist!", name))
+		if err == gorm.ErrRecordNotFound {
+			return nil, errs.NewNotFound(fmt.Sprintf("ingredient with name '%s' not found", name))
+		}
+		return nil, errs.NewInternalServerError(err.Error())
 	}
 
 	return &payload, nil
@@ -51,18 +57,27 @@ func (r *IngredientRepo) GetByName(name string) (*ingrediententity.Ingredient, e
 func (r *IngredientRepo) GetById(id uuid.UUID) (*ingrediententity.Ingredient, errs.ErrMessage) {
 	var payload ingrediententity.Ingredient
 
-	if err := r.db.Where("id = ?", id).First(&payload).Error; err != nil {
-		return nil, errs.NewNotFound("This ingredient not found or inactive")
+	if err := r.db.Where("id = ? AND is_active = true", id).First(&payload).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, errs.NewNotFound("This ingredient not found or inactive")
+		}
+		return nil, errs.NewInternalServerError(err.Error())
 	}
 
 	return &payload, nil
 }
 
 func (r *IngredientRepo) Delete(id uuid.UUID, status bool) errs.ErrMessage {
-	if err := r.db.Model(&ingrediententity.Ingredient{}).
+	res := r.db.Model(&ingrediententity.Ingredient{}).
 		Where("id = ?", id).
-		Update("is_active", status).Error; err != nil {
-		return errs.NewInternalServerError(err.Error())
+		Update("is_active", status)
+
+	if res.Error != nil {
+		return errs.NewInternalServerError(res.Error.Error())
+	}
+
+	if res.RowsAffected == 0 {
+		return errs.NewNotFound("Ingredient not found")
 	}
 
 	return nil
