@@ -21,13 +21,17 @@ var (
 )
 
 func InitPostgres() {
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Jakarta",
-		config.GetKey("DB_HOST"),
-		config.GetKey("DB_USER"),
-		config.GetKey("DB_PASS"),
-		config.GetKey("DB_NAME"),
-		config.GetKey("DB_PORT"),
-	)
+	// Uncomment the line below to change the server to run locally.
+	// dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Jakarta",
+	// 	config.GetKey("DB_HOST"),
+	// 	config.GetKey("DB_USER"),
+	// 	config.GetKey("DB_PASS"),
+	// 	config.GetKey("DB_NAME"),
+	// 	config.GetKey("DB_PORT"),
+	// )
+
+	// Comment the line bellow to change the server to run production.
+	dsn := config.GetKey("DATABASE_URL")
 
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
