@@ -8,6 +8,7 @@ import (
 	"github.com/Farhan1033/resep-masakan-monolith.git/pkg/errs"
 	"github.com/Farhan1033/resep-masakan-monolith.git/pkg/helper"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type RecipeStepHandler struct {
@@ -18,6 +19,7 @@ func NewRecipeStepHandler(r *gin.RouterGroup, svc stepservice.RecipeStepService)
 	h := RecipeStepHandler{svc: svc}
 	r.POST("/step/create", h.Create)
 	r.GET("/recipe/step", h.Get)
+	r.GET("recipe/step/:id", h.GetById)
 	r.PUT("/step/update/:id", h.Update)
 	r.DELETE("/step/delete/:id", h.Delete)
 }
@@ -41,6 +43,24 @@ func (h *RecipeStepHandler) Create(c *gin.Context) {
 
 func (h *RecipeStepHandler) Get(c *gin.Context) {
 	response, err := h.svc.Get()
+	if err != nil {
+		c.JSON(err.StatusCode(), err)
+		return
+	}
+
+	helper.OKResponse(c, "Success", response)
+}
+
+func (h *RecipeStepHandler) GetById(c *gin.Context) {
+	idStr := c.Param("id")
+	id, parseErr := uuid.Parse(idStr)
+	if parseErr != nil {
+		errFormat := errs.NewBadRequest("Invalid recipe ID format")
+		c.JSON(errFormat.StatusCode(), errFormat)
+		return
+	}
+
+	response, err := h.svc.GetByRecipeId(id)
 	if err != nil {
 		c.JSON(err.StatusCode(), err)
 		return
