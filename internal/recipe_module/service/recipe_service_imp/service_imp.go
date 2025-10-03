@@ -5,10 +5,12 @@ import (
 
 	authrepository "github.com/Farhan1033/resep-masakan-monolith.git/internal/auth_module/repository/auth_repository"
 	categoryrepository "github.com/Farhan1033/resep-masakan-monolith.git/internal/category_module/repository/category_repository"
+	detailrecipeservice "github.com/Farhan1033/resep-masakan-monolith.git/internal/detail_recipe_module/service/detail_recipe_service"
 	"github.com/Farhan1033/resep-masakan-monolith.git/internal/recipe_module/dto"
 	recipeentity "github.com/Farhan1033/resep-masakan-monolith.git/internal/recipe_module/entity"
 	reciperepository "github.com/Farhan1033/resep-masakan-monolith.git/internal/recipe_module/repository/recipe_repository"
 	recipeservice "github.com/Farhan1033/resep-masakan-monolith.git/internal/recipe_module/service/recipe_service"
+	stepservice "github.com/Farhan1033/resep-masakan-monolith.git/internal/recipe_steps_module/service/step_service"
 	"github.com/Farhan1033/resep-masakan-monolith.git/pkg/errs"
 	"github.com/Farhan1033/resep-masakan-monolith.git/pkg/validation"
 	"github.com/go-playground/validator/v10"
@@ -16,20 +18,26 @@ import (
 )
 
 type RecipeSvc struct {
-	repoRecipe   reciperepository.RecipeRepository
-	repoUser     authrepository.AuthRepostiory
-	repoCategory categoryrepository.CategoryRepository
-	validate     *validator.Validate
+	repoRecipe    reciperepository.RecipeRepository
+	repoUser      authrepository.AuthRepostiory
+	repoCategory  categoryrepository.CategoryRepository
+	svcStep       stepservice.RecipeStepService
+	svcIngredient detailrecipeservice.DetailRecipeService
+	validate      *validator.Validate
 }
 
 func NewRecipeService(repoRecipe reciperepository.RecipeRepository,
 	repoUser authrepository.AuthRepostiory,
-	repoCategory categoryrepository.CategoryRepository) recipeservice.RecipeService {
+	repoCategory categoryrepository.CategoryRepository,
+	svcStep stepservice.RecipeStepService,
+	svcIngredient detailrecipeservice.DetailRecipeService) recipeservice.RecipeService {
 	return &RecipeSvc{
-		repoRecipe:   repoRecipe,
-		repoUser:     repoUser,
-		repoCategory: repoCategory,
-		validate:     validator.New(),
+		repoRecipe:    repoRecipe,
+		repoUser:      repoUser,
+		repoCategory:  repoCategory,
+		svcStep:       svcStep,
+		svcIngredient: svcIngredient,
+		validate:      validator.New(),
 	}
 }
 
@@ -211,7 +219,7 @@ func (s *RecipeSvc) Update(id uuid.UUID, payload *dto.UpdateRequest, userId uuid
 		CookTime:       payload.CookTime,
 		TotalTime:      payload.TotalTime,
 		Servings:       payload.Servings,
-		OriginRegion:   payload.OriginRegion,	
+		OriginRegion:   payload.OriginRegion,
 		ImageUrl:       payload.ImageUrl,
 	}
 
@@ -243,4 +251,49 @@ func (s *RecipeSvc) Delete(id uuid.UUID, status bool) errs.ErrMessage {
 	}
 
 	return nil
+}
+
+func (s *RecipeSvc) GetDetailRecipe(id uuid.UUID) (*dto.RecipeDetail, errs.ErrMessage) {
+	recipe, errMsgRecipe := s.repoRecipe.GetById(id)
+	if errMsgRecipe != nil {
+		return nil, errs.NewNotFound("Recipe not found!")
+	}
+
+	steps, errMsgStep := s.svcStep.GetByRecipeId(id)
+	if errMsgStep != nil {
+		return nil, errs.NewNotFound("Step not found!")
+	}
+
+	ingredients, errMsgIngredient := s.svcIngredient.GetDetailRecipeByRecipeId(id)
+	if errMsgIngredient != nil {
+		return nil, errs.NewNotFound("Ingredient not found!")
+	}
+
+	response := &dto.RecipeDetail{
+		ID:             recipe.ID,
+		Title:          recipe.Title,
+		Description:    recipe.Description,
+		DifficultLevel: recipe.DifficultLevel,
+		PrepTime:       recipe.PrepTime,
+		CookTime:       recipe.CookTime,
+		TotalTime:      recipe.TotalTime,
+		Servings:       recipe.Servings,
+		OriginRegion:   recipe.OriginRegion,
+		ImageUrl:       recipe.ImageUrl,
+		IsActive:       recipe.IsActive,
+		Categories: &dto.Category{
+			ID:   recipe.CategoryID,
+			Name: recipe.CategoryName,
+		},
+		Steps:       steps,
+		Ingredients: ingredients,
+		CreatedBy: &dto.CreatedBy{
+			ID:       recipe.UserID,
+			FullName: recipe.UserName,
+		},
+		CreatedAt: recipe.CreatedAt,
+		UpdatedAt: recipe.UpdatedAt,
+	}
+
+	return response, nil
 }
