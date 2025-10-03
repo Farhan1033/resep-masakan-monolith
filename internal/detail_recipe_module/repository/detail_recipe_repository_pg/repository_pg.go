@@ -46,7 +46,6 @@ func (r *DetailRecipeRepo) Get() ([]dto.RecipeWithIngredients, errs.ErrMessage) 
 		return nil, errs.NewInternalServerError(fmt.Sprintf("failed to get detail recipes: %v", err))
 	}
 
-	// kalau kosong, tetap return slice kosong (bukan error)
 	return results, nil
 }
 
