@@ -3,6 +3,7 @@ package recipeserviceimp
 import (
 	"math"
 
+	"github.com/Farhan1033/resep-masakan-monolith.git/event"
 	authrepository "github.com/Farhan1033/resep-masakan-monolith.git/internal/auth_module/repository/auth_repository"
 	categoryrepository "github.com/Farhan1033/resep-masakan-monolith.git/internal/category_module/repository/category_repository"
 	detailrecipeservice "github.com/Farhan1033/resep-masakan-monolith.git/internal/detail_recipe_module/service/detail_recipe_service"
@@ -12,6 +13,7 @@ import (
 	recipeservice "github.com/Farhan1033/resep-masakan-monolith.git/internal/recipe_module/service/recipe_service"
 	stepservice "github.com/Farhan1033/resep-masakan-monolith.git/internal/recipe_steps_module/service/step_service"
 	"github.com/Farhan1033/resep-masakan-monolith.git/pkg/errs"
+	"github.com/Farhan1033/resep-masakan-monolith.git/pkg/logger"
 	"github.com/Farhan1033/resep-masakan-monolith.git/pkg/validation"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
@@ -24,13 +26,15 @@ type RecipeSvc struct {
 	svcStep       stepservice.RecipeStepService
 	svcIngredient detailrecipeservice.DetailRecipeService
 	validate      *validator.Validate
+	bus           *event.EventBus
 }
 
 func NewRecipeService(repoRecipe reciperepository.RecipeRepository,
 	repoUser authrepository.AuthRepostiory,
 	repoCategory categoryrepository.CategoryRepository,
 	svcStep stepservice.RecipeStepService,
-	svcIngredient detailrecipeservice.DetailRecipeService) recipeservice.RecipeService {
+	svcIngredient detailrecipeservice.DetailRecipeService,
+	bus *event.EventBus) recipeservice.RecipeService {
 	return &RecipeSvc{
 		repoRecipe:    repoRecipe,
 		repoUser:      repoUser,
@@ -38,33 +42,27 @@ func NewRecipeService(repoRecipe reciperepository.RecipeRepository,
 		svcStep:       svcStep,
 		svcIngredient: svcIngredient,
 		validate:      validator.New(),
+		bus:           bus,
 	}
 }
 
 func (s *RecipeSvc) Create(payload *dto.CreateRequest, IdUser uuid.UUID) (*dto.CreateResponse, errs.ErrMessage) {
 	if err := s.validate.Struct(payload); err != nil {
 		formatError := validation.FormatValidationError(err)
+		logger.Error("RecipeCreateValidationFailed", err, payload)
 		return nil, errs.NewBadRequest(formatError.Message())
 	}
 
 	user, errUser := s.repoUser.GetById(IdUser)
 	if errUser != nil {
+		logger.Error("RecipeCreateUserNotFound", errUser, payload)
 		return nil, errUser
-	}
-
-	userId := &dto.CreatedBy{
-		ID:       user.ID,
-		FullName: user.FullName,
 	}
 
 	category, errCategory := s.repoCategory.GetById(payload.CategoryId)
 	if errCategory != nil {
+		logger.Error("RecipeCreateCategoryNotFound", errCategory, payload)
 		return nil, errCategory
-	}
-
-	categoryId := &dto.Category{
-		ID:   category.ID,
-		Name: category.Name,
 	}
 
 	request := &recipeentity.Recipe{
@@ -83,8 +81,12 @@ func (s *RecipeSvc) Create(payload *dto.CreateRequest, IdUser uuid.UUID) (*dto.C
 
 	recipe, err := s.repoRecipe.Create(request)
 	if err != nil {
+		logger.Error("RecipeCreateFailed", err, payload)
 		return nil, err
 	}
+
+	s.bus.Publish("recipeCreated", recipe)
+	logger.Info("RecipeCreated", recipe)
 
 	response := &dto.CreateResponse{
 		ID:             recipe.ID,
@@ -98,10 +100,16 @@ func (s *RecipeSvc) Create(payload *dto.CreateRequest, IdUser uuid.UUID) (*dto.C
 		OriginRegion:   recipe.OriginRegion,
 		ImageUrl:       recipe.ImageUrl,
 		CreatedAt:      recipe.CreatedAt,
-		Category:       categoryId,
-		CreatedBy:      userId,
+		Category: &dto.Category{
+			ID:   category.ID,
+			Name: category.Name,
+		},
+		CreatedBy: &dto.CreatedBy{
+			ID:       user.ID,
+			FullName: user.FullName,
+		},
 	}
-
+	
 	return response, nil
 }
 
@@ -195,18 +203,16 @@ func (s *RecipeSvc) GetById(id uuid.UUID) (*dto.GetResponse, errs.ErrMessage) {
 }
 
 func (s *RecipeSvc) Update(id uuid.UUID, payload *dto.UpdateRequest, userId uuid.UUID) (*dto.UpdateResponse, errs.ErrMessage) {
-	if err := s.validate.Struct(payload); err != nil {
-		formatError := validation.FormatValidationError(err)
-		return nil, errs.NewBadRequest(formatError.Message())
-	}
-
 	existingRecipe, err := s.repoRecipe.GetById(id)
 	if err != nil {
+		logger.Error("RecipeUpdateNotFound", err, id)
 		return nil, err
 	}
 
 	if existingRecipe.UserID != userId {
-		return nil, errs.NewForbidden("You are not allowed to update this recipe")
+		errForbidden := errs.NewForbidden("You are not allowed to update this recipe")
+		logger.Error("RecipeUpdateForbidden", errForbidden, id)
+		return nil, errForbidden
 	}
 
 	updateData := &recipeentity.Recipe{
@@ -224,11 +230,15 @@ func (s *RecipeSvc) Update(id uuid.UUID, payload *dto.UpdateRequest, userId uuid
 
 	updated, errUpdate := s.repoRecipe.Update(id, updateData)
 	if errUpdate != nil {
+		logger.Error("RecipeUpdateFailed", errUpdate, payload)
 		return nil, errUpdate
 	}
 
+	s.bus.Publish("recipeUpdated", updated)
+	logger.Info("RecipeUpdated", updated)
+
 	return &dto.UpdateResponse{
-		ID:             id,
+		ID:             updated.ID,
 		CategoryId:     updated.CategoryId,
 		Title:          updated.Title,
 		Description:    updated.Description,
@@ -246,8 +256,12 @@ func (s *RecipeSvc) Update(id uuid.UUID, payload *dto.UpdateRequest, userId uuid
 func (s *RecipeSvc) Delete(id uuid.UUID, status bool) errs.ErrMessage {
 	err := s.repoRecipe.Delete(id, status)
 	if err != nil {
+		logger.Error("RecipeDeleteFailed", err, id)
 		return err
 	}
+
+	s.bus.Publish("recipeDeleted", id)
+	logger.Info("RecipeDeleted", id)
 
 	return nil
 }
