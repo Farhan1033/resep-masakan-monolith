@@ -157,11 +157,13 @@ http://localhost:8080/api/v1 (Jika dijalankan di lokal)
 
 ## 📬 Contoh Request via Swagger / Postman
 
-**Cooming Soon**
+**Dokumentasi API Request Body dengan Postman**
 
 ```
-
+https://documenter.getpostman.com/view/28163430/2sB3QGuBg9
 ```
+
+
 
 
 
