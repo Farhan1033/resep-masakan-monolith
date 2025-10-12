@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/Farhan1033/resep-masakan-monolith.git/event"
 	"github.com/Farhan1033/resep-masakan-monolith.git/infra/config"
 	postgressql "github.com/Farhan1033/resep-masakan-monolith.git/infra/postgres"
 	authhandler "github.com/Farhan1033/resep-masakan-monolith.git/internal/auth_module/handler"
@@ -25,6 +26,7 @@ import (
 	stephandler "github.com/Farhan1033/resep-masakan-monolith.git/internal/recipe_steps_module/handler"
 	steprepositorypg "github.com/Farhan1033/resep-masakan-monolith.git/internal/recipe_steps_module/repository/step_repository_pg"
 	stepserviceimpl "github.com/Farhan1033/resep-masakan-monolith.git/internal/recipe_steps_module/service/step_service_impl"
+	"github.com/Farhan1033/resep-masakan-monolith.git/pkg/logger"
 	"github.com/Farhan1033/resep-masakan-monolith.git/pkg/middleware"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -49,8 +51,15 @@ func main() {
 	postgressql.InitPostgres()
 	infoLogger.Println("PostgreSQL connected successfully")
 
+	// Event Driven System
+	bus := event.NewEventBus()
+	event.InitEventLogger()
+	event.RegisterRecipeEvents(bus)
+	logger.Init()
+
 	// Setup Gin
 	r := gin.Default()
+	r.Use(middleware.RequestLogger())
 
 	// Comment the line bellow to change the server to run debug mode.
 	gin.SetMode(gin.ReleaseMode)
@@ -86,6 +95,7 @@ func main() {
 		categoryRepo,
 		stepService,
 		detailService,
+		bus,
 	)
 
 	// Setup Router
