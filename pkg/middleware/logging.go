@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -9,9 +10,16 @@ import (
 )
 
 func RequestLogger() gin.HandlerFunc {
-	file, err := os.OpenFile("logs/api.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	logDir := "/tmp/logs"
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		fmt.Println("Cannot create /tmp/logs folder, fallback to stdout")
+	}
+
+	filePath := logDir + "/api.log"
+	file, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		log.Fatalf("Failed to open API log file: %v", err)
+		fmt.Println("Cannot open /tmp/logs/api.log, fallback to stdout")
+		file = os.Stdout
 	}
 
 	logger := log.New(file, "[API] ", log.Ldate|log.Ltime)
@@ -27,7 +35,6 @@ func RequestLogger() gin.HandlerFunc {
 		latency := time.Since(start)
 		status := c.Writer.Status()
 
-		logger.Printf("%s %s | %d | %v | %s",
-			method, path, status, latency, ip)
+		logger.Printf("%s %s | %d | %v | %s", method, path, status, latency, ip)
 	}
 }

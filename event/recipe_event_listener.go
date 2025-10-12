@@ -12,12 +12,22 @@ import (
 var eventLogger *log.Logger
 
 func InitEventLogger() {
-	file, err := os.OpenFile("logs/event.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatalf("Failed to open event log file: %v", err)
+	var output *os.File
+	var err error
+
+	if err = os.MkdirAll("/tmp/logs", 0755); err != nil {
+		fmt.Println("Cannot create /tmp/logs, fallback to stdout")
+		output = os.Stdout
+	} else {
+		output, err = os.OpenFile("/tmp/logs/event.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		if err != nil {
+			fmt.Println("Cannot open /tmp/logs/event.log, fallback to stdout")
+			output = os.Stdout
+		}
 	}
 
-	eventLogger = log.New(file, "[EVENT] ", log.Ldate|log.Ltime)
+	eventLogger = log.New(output, "[EVENT] ", log.Ldate|log.Ltime)
+	log.SetOutput(output)
 }
 
 func RegisterRecipeEvents(bus *EventBus) {

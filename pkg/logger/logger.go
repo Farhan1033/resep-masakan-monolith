@@ -18,9 +18,25 @@ func Init() {
 }
 
 func Info(event string, payload any) {
-	Log.WithFields(logrus.Fields{"event": event}).Info("Event Info")
+	if payload != nil {
+		Log.WithFields(logrus.Fields{
+			"event":   event,
+			"payload": payload,
+		}).Info("Event Info")
+	} else {
+		Log.WithFields(logrus.Fields{
+			"event": event,
+		}).Info("Event Info")
+	}
 }
 
 func Error(event string, err error, payload any) {
-	Log.WithFields(logrus.Fields{"event": event}).Error(err.Error())
+	fields := logrus.Fields{
+		"event": event,
+		"error": err.Error(),
+	}
+	if payload != nil {
+		fields["payload"] = payload
+	}
+	Log.WithFields(fields).Error("Event Error")
 }
