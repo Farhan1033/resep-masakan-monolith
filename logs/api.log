@@ -1,0 +1,5 @@
+[API] 2025/10/12 23:53:13 POST /api/v1/recipe/create | 201 | 490.866426ms | ::1
+[API] 2025/10/12 23:55:10 POST /api/v1/recipe/create | 201 | 550.511144ms | ::1
+[API] 2025/10/12 23:56:29 POST /api/v1/recipe/create | 201 | 466.211584ms | ::1
+[API] 2025/10/12 23:56:43 POST /api/v1/recipe/create | 201 | 308.058814ms | ::1
+[API] 2025/10/12 23:56:52 POST /api/v1/recipe/create | 400 | 354.671µs | ::1
